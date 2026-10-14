@@ -1,17 +1,5 @@
-import asyncio
+from sqlalchemy.ext.asyncio import create_async_engine
 
-from sqlalchemy import text, select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from credentials import settings
 
-engine = create_async_engine("postgresql+asyncpg://postgres:12345678@localhost:5432/jwt_db")
-# async def main():
-#     engine = create_async_engine("postgresql+asyncpg://postgres:12345678@localhost:5432/jwt_db")
-#     session = AsyncSession(engine, expire_on_commit=False)
-#
-#     res = await session.execute(text("select 'hello world'"))
-#     result = res.scalars().first()
-#     print(result)
-#
-#     await engine.dispose()
-#
-# asyncio.run(main())
+engine = create_async_engine(f"postgresql+asyncpg://{settings.postgres_user}:{settings.postgres_password}@localhost:5432/{settings.postgres_db}")
