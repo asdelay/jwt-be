@@ -1,23 +1,29 @@
 import enum
 
-from sqlalchemy import String
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import String, ForeignKey, Enum
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
     pass
 
 class Role(enum.Enum):
-    admin = "Admin"
-    user = "User"
+    admin = "admin"
+    user = "user"
 
 class User(Base):
     __tablename__ = "user"
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(50), unique=True)
-    role: Mapped[Role]
+    role: Mapped[Role] = mapped_column(Enum(Role), default=Role.user)
+
+    flowers: Mapped[list["Flower"]] = relationship(back_populates="creator")
 
 class Flower(Base):
+    __tablename__ = "flower"
 
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
 
-class RefreshToken(Base):
+    creator_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    creator: Mapped["User"] = relationship(back_populates="flowers")
