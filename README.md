@@ -2,7 +2,7 @@ app with full jwt rotation
 
 TODO: 
 
-    delete user by id
+    implement normal exception-handling
     
 
 1. run the db with `docker compose up`

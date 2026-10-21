@@ -19,3 +19,17 @@ async def fetch_all_users(session: AsyncSession):
     query = select(User).options(selectinload(User.flowers))
     result = await session.scalars(query)
     return result.all()
+
+async def delete_user_by_id(id: int, session: AsyncSession):
+
+    query = select(User).where(User.id == id)
+    result = await session.execute(query)
+    user = result.scalars().one_or_none()
+
+    if(user is None):
+        raise
+
+    await session.delete(user)
+    await session.commit()
+
+    return {"response": f"User {user.id} is deleted"}
