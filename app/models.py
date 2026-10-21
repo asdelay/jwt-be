@@ -12,7 +12,7 @@ class Role(enum.Enum):
     user = "user"
 
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(50), unique=True)
     role: Mapped[Role] = mapped_column(Enum(Role), default=Role.user)
@@ -20,10 +20,10 @@ class User(Base):
     flowers: Mapped[list["Flower"]] = relationship(back_populates="creator")
 
 class Flower(Base):
-    __tablename__ = "flower"
+    __tablename__ = "flowers"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
 
-    creator_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     creator: Mapped["User"] = relationship(back_populates="flowers")
