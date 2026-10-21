@@ -1,9 +1,9 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 from app.models import Role
 
 class SUserAdd(BaseModel):
-    email: str
+    email: EmailStr
     role: Role
 
 class SUser(SUserAdd):

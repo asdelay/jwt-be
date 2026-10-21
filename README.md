@@ -2,7 +2,8 @@ app with full jwt rotation
 
 TODO: 
 
-    add pydantic schema validation (for email espcly)
+    delete user by id
+    
 
 1. run the db with `docker compose up`
 
