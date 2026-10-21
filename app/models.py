@@ -17,7 +17,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(50), unique=True)
     role: Mapped[Role] = mapped_column(Enum(Role), default=Role.user)
 
-    flowers: Mapped[list["Flower"]] = relationship(back_populates="creator", cascade="all, delete")
+    flowers: Mapped[list["Flower"]] = relationship(back_populates="creator")
 
 class Flower(Base):
     __tablename__ = "flowers"
