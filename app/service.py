@@ -1,16 +1,23 @@
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.schemas import SUserAdd, SUser
 
 from app.models import User
+from app.exceptions import AlreadyExistsError, NotFoundError
 
 
 async def add_user(user: SUserAdd, session: AsyncSession) -> SUserAdd:
-    new_user = User(email=user.email, role=user.role)
+    new_user = User(**user.model_dump())
     session.add(new_user)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise AlreadyExistsError(message="User with such email already exists")
+
     return user
 
 async def fetch_all_users(session: AsyncSession):
@@ -21,13 +28,12 @@ async def fetch_all_users(session: AsyncSession):
     return result.all()
 
 async def delete_user_by_id(id: int, session: AsyncSession):
-
     query = select(User).where(User.id == id)
     result = await session.execute(query)
     user = result.scalars().one_or_none()
 
     if(user is None):
-        raise
+        raise NotFoundError(message="This user does not exist")
 
     await session.delete(user)
     await session.commit()

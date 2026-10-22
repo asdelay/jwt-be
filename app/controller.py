@@ -13,10 +13,7 @@ SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 @router.post("/users")
 async def create_user(user: Annotated[SUserAdd, Depends()], session: SessionDep):
-    try:
-        return await add_user(user, session)
-    except:
-        raise HTTPException(status_code=404, detail="Failed to create user")
+    return await add_user(user, session)
 
 @router.get("/users", response_model=list[SUser])
 async def get_all_users(session: SessionDep) -> list [SUser]:
@@ -24,7 +21,4 @@ async def get_all_users(session: SessionDep) -> list [SUser]:
 
 @router.delete("/users/{id}")
 async def delete_user(id: int, session: SessionDep):
-    try:
-        return await delete_user_by_id(id, session)
-    except:
-        raise HTTPException(status_code=404, detail="User not found")
+    return await delete_user_by_id(id, session)

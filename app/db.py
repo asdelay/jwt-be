@@ -8,4 +8,8 @@ session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 async def get_session():
     async with session_maker() as session:
-        yield session
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
