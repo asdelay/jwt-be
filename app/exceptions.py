@@ -17,3 +17,7 @@ class AlreadyExistsError(AppError):
 class ForbiddenError(AppError):
     status_code = 403
     code = "forbidden"
+
+class BadRequestError(AppError):
+    status_code = 400
+    code='bad_request'

@@ -3,10 +3,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.schemas import SUserAdd, SUser
+from app.schemas import SUserAdd, SFlowerAdd
 
-from app.models import User
-from app.exceptions import AlreadyExistsError, NotFoundError
+from app.models import User, Flower
+from app.exceptions import AlreadyExistsError, NotFoundError, BadRequestError
 
 
 async def add_user(user: SUserAdd, session: AsyncSession) -> SUserAdd:
@@ -39,3 +39,29 @@ async def delete_user_by_id(id: int, session: AsyncSession):
     await session.commit()
 
     return {"response": f"User {user.id} is deleted"}
+
+async def add_flower(flower:SFlowerAdd, session: AsyncSession):
+    creator_id_from_client = flower.creator_id
+
+    query = select(User).where(User.id == creator_id_from_client)
+    result = await session.execute(query)
+    user = result.scalars().one_or_none()
+
+    if user is None:
+        raise NotFoundError("This user does not exist")
+
+    new_flower = Flower(**flower.model_dump(), creator=user)
+    session.add(new_flower)
+
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise BadRequestError("Failed to create flower")
+
+    return new_flower
+
+async def fetch_all_flowers(session: AsyncSession):
+    query = select(Flower).options(selectinload(Flower.creator))
+    result = await session.scalars(query)
+    return result.all()

@@ -10,14 +10,14 @@ class SUser(SUserAdd):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    flowers: list[SFlower]
+    flowers: list[SFlowerAdd]
 
 class SFlowerAdd(BaseModel):
     name: str
+    creator_id: int
 
 class SFlower(SFlowerAdd):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    creator_id: int
     creator: SUserAdd

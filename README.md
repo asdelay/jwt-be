@@ -2,7 +2,7 @@ app with full jwt rotation
 
 TODO: 
 
-    Implement search and create for plants     
+    fix response when creating user (no id)  
 
 
     POST /users parameters - Depends should be deleted before prod bc now it makes app accept query params instead of body
