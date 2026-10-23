@@ -2,10 +2,10 @@ app with full jwt rotation
 
 TODO: 
 
-    fix response when creating user (no id)  
+    add update for flowers
 
 
-    POST /users parameters - Depends should be deleted before prod bc now it makes app accept query params instead of body
+    POST parameters - Depends should be deleted before prod bc now it makes app accept query params instead of body
 
     
 

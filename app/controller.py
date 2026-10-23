@@ -11,7 +11,7 @@ router = APIRouter()
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
-@router.post("/users")
+@router.post("/users", response_model=SUser)
 async def create_user(user: Annotated[SUserAdd, Depends()], session: SessionDep):
     return await add_user(user, session)
 
@@ -24,7 +24,7 @@ async def delete_user(id: int, session: SessionDep):
     return await delete_user_by_id(id, session)
 
 
-@router.post("/flowers")
+@router.post("/flowers", response_model=SFlower)
 async def create_flower(flower: Annotated[SFlowerAdd, Depends()], session: SessionDep):
     return await add_flower(flower, session)
 

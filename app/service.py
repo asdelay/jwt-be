@@ -9,8 +9,8 @@ from app.models import User, Flower
 from app.exceptions import AlreadyExistsError, NotFoundError, BadRequestError
 
 
-async def add_user(user: SUserAdd, session: AsyncSession) -> SUserAdd:
-    new_user = User(**user.model_dump())
+async def add_user(user: SUserAdd, session: AsyncSession) -> User:
+    new_user = User(**user.model_dump(), flowers=[])
     session.add(new_user)
     try:
         await session.commit()
@@ -18,7 +18,7 @@ async def add_user(user: SUserAdd, session: AsyncSession) -> SUserAdd:
         await session.rollback()
         raise AlreadyExistsError(message="User with such email already exists")
 
-    return user
+    return new_user
 
 async def fetch_all_users(session: AsyncSession):
     # selectinload bc pydantic will try to serialize User.flowers but no User.flowers is available
