@@ -2,7 +2,7 @@ app with full jwt rotation
 
 TODO: 
 
-    add update for flowers
+    add delete for flowers
 
 
     POST parameters - Depends should be deleted before prod bc now it makes app accept query params instead of body

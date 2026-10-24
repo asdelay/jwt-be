@@ -21,3 +21,6 @@ class SFlower(SFlowerAdd):
 
     id: int
     creator: SUserAdd
+
+class SFlowerUpdate(BaseModel):
+    name: str | None = None

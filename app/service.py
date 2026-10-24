@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.schemas import SUserAdd, SFlowerAdd
+from app.schemas import SUserAdd, SFlowerAdd, SFlowerUpdate
 
 from app.models import User, Flower
 from app.exceptions import AlreadyExistsError, NotFoundError, BadRequestError
@@ -65,3 +65,17 @@ async def fetch_all_flowers(session: AsyncSession):
     query = select(Flower).options(selectinload(Flower.creator))
     result = await session.scalars(query)
     return result.all()
+
+async def update_flower_by_id(id: int, updated_flower: SFlowerUpdate, session: AsyncSession):
+    flower = await session.get(Flower, id)
+
+    if(flower is None):
+        raise NotFoundError("Flower with such id does not exist")
+
+    update_data = updated_flower.model_dump(exclude_unset=True)
+
+    for field, value in update_data.items():
+        setattr(flower, field, value)
+
+    await session.commit()
+    return flower

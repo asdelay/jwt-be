@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas import SUserAdd, SUser, SFlowerAdd, SFlower
-from app.service import add_user, fetch_all_users, delete_user_by_id, add_flower, fetch_all_flowers
+from app.schemas import SUserAdd, SUser, SFlowerAdd, SFlower, SFlowerUpdate
+from app.service import add_user, fetch_all_users, delete_user_by_id, add_flower, fetch_all_flowers, update_flower_by_id
 from app.db import get_session
 
 router = APIRouter()
@@ -31,3 +31,7 @@ async def create_flower(flower: Annotated[SFlowerAdd, Depends()], session: Sessi
 @router.get("/flowers", response_model=list[SFlower])
 async def get_all_flowers(session: SessionDep) -> list [SFlower]:
     return await fetch_all_flowers(session)
+
+@router.put("/flowers/{id}")
+async def update_flower(id: int, updated_flower: SFlowerUpdate, session: SessionDep):
+    return await update_flower_by_id(id, updated_flower, session)
