@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas import SUserAdd, SUser, SFlowerAdd, SFlower, SFlowerUpdate
-from app.service import add_user, fetch_all_users, delete_user_by_id, add_flower, fetch_all_flowers, update_flower_by_id
+from app.service import add_user, fetch_all_users, delete_user_by_id, add_flower, fetch_all_flowers, \
+    update_flower_by_id, delete_flower_by_id
 from app.db import get_session
 
 router = APIRouter()
@@ -35,3 +36,7 @@ async def get_all_flowers(session: SessionDep) -> list [SFlower]:
 @router.put("/flowers/{id}")
 async def update_flower(id: int, updated_flower: SFlowerUpdate, session: SessionDep):
     return await update_flower_by_id(id, updated_flower, session)
+
+@router.delete("/flowers/{id}")
+async def delete_flower(id: int, session: SessionDep):
+    return await delete_flower_by_id(id, session)

@@ -69,7 +69,7 @@ async def fetch_all_flowers(session: AsyncSession):
 async def update_flower_by_id(id: int, updated_flower: SFlowerUpdate, session: AsyncSession):
     flower = await session.get(Flower, id)
 
-    if(flower is None):
+    if flower is None:
         raise NotFoundError("Flower with such id does not exist")
 
     update_data = updated_flower.model_dump(exclude_unset=True)
@@ -77,5 +77,15 @@ async def update_flower_by_id(id: int, updated_flower: SFlowerUpdate, session: A
     for field, value in update_data.items():
         setattr(flower, field, value)
 
+    await session.commit()
+    return flower
+
+async def delete_flower_by_id(id: int, session: AsyncSession):
+    flower = await session.get(Flower, id)
+
+    if flower is None:
+        raise NotFoundError("Flower with such id does not exist")
+
+    await session.delete(flower)
     await session.commit()
     return flower
