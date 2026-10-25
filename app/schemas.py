@@ -14,6 +14,7 @@ class SUser(SUserAdd):
 
 class SFlowerAdd(BaseModel):
     name: str
+    is_public: bool = False
     creator_id: int
 
 class SFlower(SFlowerAdd):
@@ -24,3 +25,4 @@ class SFlower(SFlowerAdd):
 
 class SFlowerUpdate(BaseModel):
     name: str | None = None
+    is_public: bool = False

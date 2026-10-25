@@ -1,7 +1,8 @@
 import enum
 
-from sqlalchemy import String, ForeignKey, Enum
+from sqlalchemy import String, ForeignKey, Enum, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.sql import expression
 
 
 class Base(DeclarativeBase):
@@ -24,6 +25,7 @@ class Flower(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
+    is_public: Mapped[bool] = mapped_column(Boolean(False), server_default=expression.false())
 
     creator_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     creator: Mapped["User"] = relationship(back_populates="flowers")
