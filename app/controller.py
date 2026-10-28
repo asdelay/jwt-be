@@ -40,3 +40,19 @@ async def update_flower(id: int, updated_flower: SFlowerUpdate, session: Session
 @router.delete("/flowers/{id}")
 async def delete_flower(id: int, session: SessionDep):
     return await delete_flower_by_id(id, session)
+
+@router.post("/auth/login")
+async def login():
+    ...
+
+@router.post("/auth/register")
+async def register():
+    ...
+
+@router.get("/auth/me")
+async def me():
+    ...
+
+@router.post("/auth/refresh")
+async def refresh():
+    ...

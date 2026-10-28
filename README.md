@@ -2,7 +2,7 @@ app with full jwt rotation
 
 TODO: 
 
-    add login, refresh, me routes
+    implement simple stateless jwt
 
 
 
