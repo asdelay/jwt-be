@@ -11,6 +11,16 @@ class Settings(BaseSettings):
     postgres_host: str
     postgres_port: str
 
+    smtp_user: str
+    smtp_host: str
+    smtp_port: str
+    smtp_password: str
+
+    otp_secret: str
+    access_token_secret: str
+
+    cookie_secure: bool
+
     def get_connection_string(self) -> str:
         return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 

@@ -2,11 +2,13 @@ app with full jwt rotation
 
 TODO: 
 
-    implement simple stateless jwt
+    protect routes that need to be protected w authentication
+    organize better folder structure
 
 
 
-    
+    later add redis (otps, tokens, popular flowers)
+    clear dbs from old expired otps
 
 1. run the db with `docker compose up`
 

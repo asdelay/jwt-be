@@ -1,12 +1,14 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas import SUserAdd, SUser, SFlowerAdd, SFlower, SFlowerUpdate
+from app.schemas import SUserAdd, SUser, SFlowerAdd, SFlower, SFlowerUpdate, SLogin, SVerifyCode
 from app.service import add_user, fetch_all_users, delete_user_by_id, add_flower, fetch_all_flowers, \
-    update_flower_by_id, delete_flower_by_id
+    update_flower_by_id, delete_flower_by_id, login_by_email, verify_code_by_id
 from app.db import get_session
+from app.credentials import settings
+from app.utils import ACCESS_TTL
 
 router = APIRouter()
 
@@ -42,8 +44,8 @@ async def delete_flower(id: int, session: SessionDep):
     return await delete_flower_by_id(id, session)
 
 @router.post("/auth/login")
-async def login():
-    ...
+async def login(login_data: SLogin, session: SessionDep):
+    return await login_by_email(login_data, session)
 
 @router.post("/auth/register")
 async def register():
@@ -56,3 +58,21 @@ async def me():
 @router.post("/auth/refresh")
 async def refresh():
     ...
+
+@router.post("/auth/code/verify")
+async def verify_code(code: SVerifyCode, response: Response, session: SessionDep):
+    access_token = await verify_code_by_id(code.code, code.user_id, session)
+
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=settings.cookie_secure,  # True in prod, False on localhost
+        samesite="lax",
+        max_age=int(ACCESS_TTL.total_seconds()),
+        path="/"
+    )
+
+    return {"message": "ok"}
+
+

@@ -21,3 +21,7 @@ class ForbiddenError(AppError):
 class BadRequestError(AppError):
     status_code = 400
     code='bad_request'
+
+class UnauthorizedError(AppError):
+    status_code = 401
+    code="unauthorized"

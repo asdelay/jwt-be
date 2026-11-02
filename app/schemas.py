@@ -26,3 +26,10 @@ class SFlower(SFlowerAdd):
 class SFlowerUpdate(BaseModel):
     name: str | None = None
     is_public: bool = False
+
+class SLogin(BaseModel):
+    email: str
+
+class SVerifyCode(BaseModel):
+    code: str
+    user_id: int
