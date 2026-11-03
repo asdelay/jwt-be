@@ -1,9 +1,9 @@
 import hmac
-import smtplib
 from datetime import datetime, timezone, timedelta
 from email.message import EmailMessage
 
 import aiosmtplib
+from fastapi import BackgroundTasks
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,25 +17,18 @@ from app.schemas import SLogin
 from app.utils import generate_otp, hash_otp, create_access_token
 
 
-async def login_by_email(login_data: SLogin, session: AsyncSession):
-    query = select(User).where(User.email == login_data.email).options(selectinload(User.flowers))
-
+async def login_by_email(background_tasks: BackgroundTasks, login_data: SLogin, session: AsyncSession):
+    query = select(User).where(User.email == login_data.email)
     user = (await session.execute(query)).scalar_one_or_none()
 
     if user is None:
         raise NotFoundError("Failed to log in")
 
     code = generate_otp()
+    await save_otp(code, user, session)
 
-    saved_otp = await save_otp(code, user, session)
-
-    email_sent = await send_verification_email(user.email, code)
-
-    # send code by email
-    # verify code
-    # if code is valid, generate jwt and send it to user
-
-    return email_sent
+    background_tasks.add_task(send_verification_email, user.email, code)
+    return {"message": "Email sent"}
 
 async def save_otp(code: str, user: User, session: AsyncSession):
     now = datetime.now(timezone.utc)

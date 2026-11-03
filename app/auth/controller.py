@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Response
+from typing import Annotated
+
+from fastapi import APIRouter, Response, BackgroundTasks, Depends
 
 from app.credentials import settings
 from app.types import SessionDep
@@ -9,8 +11,8 @@ from app.auth.service import login_by_email, verify_code_by_id
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
 @auth_router.post("/login")
-async def login(login_data: SLogin, session: SessionDep):
-    return await login_by_email(login_data, session)
+async def login(login_data: SLogin, session: SessionDep, background_tasks: BackgroundTasks):
+    return await login_by_email(background_tasks, login_data, session)
 
 @auth_router.post("/register")
 async def register():
