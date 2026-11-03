@@ -1,7 +1,11 @@
+
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from app.controller import router
+from app.auth.controller import auth_router
+from app.flowers.controller import flowers_router
+from app.users.controller import users_router
 from app.exceptions import AppError
 
 app = FastAPI()
@@ -25,6 +29,6 @@ async def base():
     return {"status": "ok"}
 
 
-
-
-app.include_router(router)
+app.include_router(auth_router)
+app.include_router(flowers_router)
+app.include_router(users_router)
