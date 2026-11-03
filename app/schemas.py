@@ -32,4 +32,4 @@ class SLogin(BaseModel):
 
 class SVerifyCode(BaseModel):
     code: str
-    user_id: int
+    email: EmailStr

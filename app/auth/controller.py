@@ -6,7 +6,7 @@ from app.credentials import settings
 from app.types import SessionDep
 from app.schemas import SLogin, SVerifyCode
 from app.utils import ACCESS_TTL
-from app.auth.service import login_by_email, verify_code_by_id
+from app.auth.service import login_by_email, verify_code_by_email
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -28,7 +28,7 @@ async def refresh():
 
 @auth_router.post("/code/verify")
 async def verify_code(code: SVerifyCode, response: Response, session: SessionDep):
-    access_token = await verify_code_by_id(code.code, code.user_id, session)
+    access_token = await verify_code_by_email(code.code, code.email, session)
 
     response.set_cookie(
         key="access_token",
@@ -40,5 +40,5 @@ async def verify_code(code: SVerifyCode, response: Response, session: SessionDep
         path="/"
     )
 
-    return {"message": "ok"}
+    return {"access_token": access_token}
 

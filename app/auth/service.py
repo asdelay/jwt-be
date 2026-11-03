@@ -21,14 +21,12 @@ async def login_by_email(background_tasks: BackgroundTasks, login_data: SLogin, 
     query = select(User).where(User.email == login_data.email)
     user = (await session.execute(query)).scalar_one_or_none()
 
-    if user is None:
-        raise NotFoundError("Failed to log in")
+    if user is not None:
+        code = generate_otp()
+        await save_otp(code, user, session)
+        background_tasks.add_task(send_verification_email, user.email, code)
 
-    code = generate_otp()
-    await save_otp(code, user, session)
-
-    background_tasks.add_task(send_verification_email, user.email, code)
-    return {"message": "Email sent"}
+    return {f"message": f"Verification code was sent to {login_data.email}"}
 
 async def save_otp(code: str, user: User, session: AsyncSession):
     now = datetime.now(timezone.utc)
@@ -63,28 +61,30 @@ async def send_verification_email(to_email: str, code: str):
 
     return {"message": "email sent"}
 
-async def verify_code_by_id(code: str, user_id: int, session: AsyncSession) -> str:
+async def verify_code_by_email(code: str, email: str, session: AsyncSession) -> str:
     now = datetime.now(timezone.utc)
+    email = email.strip().lower()
 
     otp = (
         await session.execute(
             select(Otp)
+            .join(User, Otp.user_id == User.id)
             .where(
-                Otp.user_id == user_id,
+                User.email == email,
                 Otp.used_at.is_(None),
                 Otp.expires_at > now,
             )
             .options(selectinload(Otp.user))
             .order_by(Otp.created_at.desc())
             .limit(1)
-            .with_for_update()
+            .with_for_update(of=Otp)
         )
     ).scalar_one_or_none()
 
     if otp is None or otp.attempts >= MAX_OTP_VERIFICATION_ATTEMPTS:
         raise UnauthorizedError("Failed to Log in")
 
-    if not hmac.compare_digest(otp.code_hash, hash_otp(user_id, code)):
+    if not hmac.compare_digest(otp.code_hash, hash_otp(otp.user_id, code)):
         otp.attempts += 1
         await session.commit()
         raise UnauthorizedError("Failed to Log in")
@@ -92,6 +92,5 @@ async def verify_code_by_id(code: str, user_id: int, session: AsyncSession) -> s
     otp.used_at = now
     await session.commit()
 
-    access_token = create_access_token(otp.user)
-    return access_token
+    return create_access_token(otp.user)
 
