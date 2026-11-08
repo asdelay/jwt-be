@@ -25,3 +25,7 @@ class BadRequestError(AppError):
 class UnauthorizedError(AppError):
     status_code = 401
     code="unauthorized"
+
+    def __init__(self, message: str = "Failed to log in"):
+        self.message = message
+        super().__init__(message)
