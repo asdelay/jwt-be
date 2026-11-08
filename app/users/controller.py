@@ -1,10 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.schemas import SUserAdd, SUser
 from app.types import SessionDep
 from app.users.service import add_user, fetch_all_users, delete_user_by_id
+from app.auth.service import get_current_user
 
-users_router = APIRouter(prefix="/users", tags=["users"])
+users_router = APIRouter(prefix="/users", tags=["users"], dependencies=[Depends(get_current_user)])
 
 @users_router.post("", response_model=SUser)
 async def create_user(user: SUserAdd, session: SessionDep):

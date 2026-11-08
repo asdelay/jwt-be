@@ -2,7 +2,10 @@ app with full jwt rotation
 
 TODO: 
 
-    protect routes that need to be protected w authentication 
+    add authorization level protection on routes (by roles)
+    add registration
+    add refresh token w rotation and revokation strategy
+    add openid connect via google
     add rate limiting (especially on auth routes)
 
 
