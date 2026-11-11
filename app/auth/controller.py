@@ -2,9 +2,9 @@ from fastapi import APIRouter, Response, BackgroundTasks, Depends
 
 from app.credentials import settings
 from app.types import SessionDep
-from app.schemas import SLogin, SVerifyCode
+from app.schemas import SLogin, SRegister, SVerifyCode
 from app.utils import ACCESS_TTL
-from app.auth.service import login_by_email, verify_code_by_email, get_current_user
+from app.auth.service import login_by_email, register_by_email, verify_code_by_email, get_current_user
 from app.models import User
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
@@ -18,8 +18,8 @@ async def login(login_data: SLogin, session: SessionDep, background_tasks: Backg
     return await login_by_email(background_tasks, login_data, session)
 
 @auth_router.post("/register")
-async def register():
-    return {"message": "not implemented yet"}
+async def register(data: SRegister, session: SessionDep, background_tasks: BackgroundTasks):
+    return await register_by_email(background_tasks, data, session)
 
 @auth_router.post("/refresh")
 async def refresh():

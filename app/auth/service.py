@@ -11,28 +11,60 @@ from fastapi.params import Depends
 from fastapi.security import APIKeyCookie
 
 from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.constants import OTP_EXPIRATION_MINUTES, MAX_OTP_VERIFICATION_ATTEMPTS
 from app.credentials import settings
-from app.exceptions import UnauthorizedError, ForbiddenError
+from app.exceptions import AppError, UnauthorizedError, ForbiddenError
 from app.models import User, Otp, Role
-from app.schemas import SLogin
+from app.schemas import SLogin, SRegister
 from app.utils import generate_otp, hash_otp, create_access_token
 
 cookie_scheme = APIKeyCookie(name="access_token", auto_error=False)
 
+def _normalize_email(email: str) -> str:
+    return email.strip().lower()
+
+
+async def _get_user_by_email(email: str, session: AsyncSession) -> User | None:
+    return (await session.execute(select(User).where(User.email == email))).scalar_one_or_none()
+
+
+async def register_by_email(background_tasks: BackgroundTasks, data: SRegister, session: AsyncSession):
+    email = _normalize_email(data.email)
+    user = await _get_user_by_email(email, session)
+
+    if user is None:
+        session.add(User(email=email, role=Role.user))
+        try:
+            await session.commit()
+        except IntegrityError:
+            # a concurrent request registered the same email first - the unique constraint is the real guard
+            await session.rollback()
+        user = await _get_user_by_email(email, session)
+        if user is None:
+            raise AppError()
+
+    # existing or new user: same OTP flow and same response, so registration can't be used to probe emails
+    code = generate_otp()
+    await save_otp(code, user, session)
+    background_tasks.add_task(send_verification_email, user.email, code)
+
+    return {"message": f"Verification code was sent to {email}"}
+
+
 async def login_by_email(background_tasks: BackgroundTasks, login_data: SLogin, session: AsyncSession):
-    query = select(User).where(User.email == login_data.email)
-    user = (await session.execute(query)).scalar_one_or_none()
+    email = _normalize_email(login_data.email)
+    user = await _get_user_by_email(email, session)
 
     if user is not None:
         code = generate_otp()
         await save_otp(code, user, session)
         background_tasks.add_task(send_verification_email, user.email, code)
 
-    return {f"message": f"Verification code was sent to {login_data.email}"}
+    return {"message": f"Verification code was sent to {email}"}
 
 async def save_otp(code: str, user: User, session: AsyncSession):
     now = datetime.now(timezone.utc)
@@ -69,7 +101,7 @@ async def send_verification_email(to_email: str, code: str):
 
 async def verify_code_by_email(code: str, email: str, session: AsyncSession) -> str:
     now = datetime.now(timezone.utc)
-    email = email.strip().lower()
+    email = _normalize_email(email)
 
     otp = (
         await session.execute(

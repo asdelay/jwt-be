@@ -4,8 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.schemas import SUserAdd
-from app.models import User
-from app.exceptions import AlreadyExistsError, NotFoundError
+from app.auth.service import CurrentUser
+from app.models import User, Role
+from app.exceptions import AlreadyExistsError, NotFoundError, ForbiddenError
 
 
 async def add_user(user: SUserAdd, session: AsyncSession) -> User:
@@ -26,12 +27,17 @@ async def fetch_all_users(session: AsyncSession):
     result = await session.scalars(query)
     return result.all()
 
-async def delete_user_by_id(id: int, session: AsyncSession):
+async def delete_user_by_id(id: int, session: AsyncSession, current_user: CurrentUser):
+    # permission check first: otherwise 404 vs 403 would tell a regular user which user ids exist
+    # allow-list (owner or admin) rather than deny-list (role == user), so any future role is denied by default
+    if id != current_user.id and current_user.role != Role.admin:
+        raise ForbiddenError("You can only delete your own account")
+
     query = select(User).where(User.id == id)
     result = await session.execute(query)
     user = result.scalars().one_or_none()
 
-    if(user is None):
+    if user is None:
         raise NotFoundError(message="This user does not exist")
 
     await session.delete(user)

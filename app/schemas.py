@@ -1,9 +1,15 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from typing import Annotated
+
+from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field
 
 from app.models import Role
 
+# Single source of truth for emails: validated, max 50 chars (matches the users.email column),
+# and fully lowercased so every write and lookup agrees on one canonical form.
+Email = Annotated[EmailStr, Field(max_length=50), AfterValidator(str.lower)]
+
 class SUserAdd(BaseModel):
-    email: EmailStr
+    email: Email
     role: Role
 
 class SFlowerAdd(BaseModel):
@@ -31,8 +37,12 @@ class SFlowerUpdate(BaseModel):
     is_public: bool = False
 
 class SLogin(BaseModel):
-    email: str
+    email: Email
+
+class SRegister(BaseModel):
+    # role is deliberately absent: clients must never choose their own role
+    email: Email
 
 class SVerifyCode(BaseModel):
     code: str
-    email: EmailStr
+    email: Email
