@@ -1,15 +1,25 @@
 from typing import Annotated
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field, StringConstraints
 
 from app.models import Role
 
 # Single source of truth for emails: validated, max 50 chars (matches the users.email column),
 # and fully lowercased so every write and lookup agrees on one canonical form.
 Email = Annotated[EmailStr, Field(max_length=50), AfterValidator(str.lower)]
+# trimmed + lowercased so 'Alice' and 'alice' can't be two different accounts; max 50 matches users.username
+Username = Annotated[str, StringConstraints(strip_whitespace=True, to_lower=True, min_length=1, max_length=50)]
+
+class SUserBrief(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    role: Role
+    username: Username
 
 class SUserAdd(BaseModel):
     email: Email
+    username: Username
     role: Role
 
 class SFlowerAdd(BaseModel):
@@ -24,7 +34,7 @@ class SFlowerBrief(SFlowerAdd):
     creator_id: int
 
 class SFlower(SFlowerBrief):
-    creator: SUserAdd
+    creator: SUserBrief
 
 class SUser(SUserAdd):
     model_config = ConfigDict(from_attributes=True)

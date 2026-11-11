@@ -1,10 +1,8 @@
 app with full jwt rotation
 
 TODO: 
-
-    protect users controller with role based access control
+    add user patch for users to be able to change username
     add refresh token w rotation and revokation strategy
-    don't return users email with flower
     add openid connect via google
     add rate limiting on all auth routes: login, register, verify, me, refresh
 

@@ -16,7 +16,7 @@ async def add_user(user: SUserAdd, session: AsyncSession) -> User:
         await session.commit()
     except IntegrityError:
         await session.rollback()
-        raise AlreadyExistsError(message="User with such email already exists")
+        raise AlreadyExistsError(message="User with such email or username already exists")
 
     return new_user
 

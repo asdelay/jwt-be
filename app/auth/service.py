@@ -1,4 +1,5 @@
 import hmac
+import secrets
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from email.message import EmailMessage
@@ -32,20 +33,34 @@ async def _get_user_by_email(email: str, session: AsyncSession) -> User | None:
     return (await session.execute(select(User).where(User.email == email))).scalar_one_or_none()
 
 
+async def _unique_username(email: str, session: AsyncSession) -> str:
+    """Default username = the part of the email before '@' (same rule the migration used for existing users).
+    If it is taken, add a short random suffix (alice@a.com and alice@b.com can't both be 'alice')."""
+    base = email.split("@", 1)[0][:40]
+    candidate = base
+    while (await session.execute(select(User.id).where(User.username == candidate))).first() is not None:
+        candidate = f"{base}_{secrets.token_hex(3)}"
+    return candidate
+
+
 async def register_by_email(background_tasks: BackgroundTasks, data: SRegister, session: AsyncSession):
     email = _normalize_email(data.email)
     user = await _get_user_by_email(email, session)
 
-    if user is None:
-        session.add(User(email=email, role=Role.user))
+    # retry loop: the INSERT can lose a race on either unique column (email or username)
+    for _ in range(3):
+        if user is not None:
+            break
+        session.add(User(email=email, username=await _unique_username(email, session), role=Role.user))
         try:
             await session.commit()
         except IntegrityError:
-            # a concurrent request registered the same email first - the unique constraint is the real guard
+            # a concurrent request took this email (then the re-select finds it) or this username (then we retry)
             await session.rollback()
         user = await _get_user_by_email(email, session)
-        if user is None:
-            raise AppError()
+
+    if user is None:
+        raise AppError()
 
     # existing or new user: same OTP flow and same response, so registration can't be used to probe emails
     code = generate_otp()

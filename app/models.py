@@ -30,6 +30,7 @@ class User(TimestampMixin, Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(50), unique=True)
+    username: Mapped[str] = mapped_column(String(50), unique=True)
     role: Mapped[Role] = mapped_column(Enum(Role), default=Role.user)
 
     flowers: Mapped[list["Flower"]] = relationship(back_populates="creator", cascade="all, delete-orphan", passive_deletes=True)
