@@ -14,10 +14,6 @@ class AlreadyExistsError(AppError):
     status_code = 409
     code = "already_exists"
 
-class ForbiddenError(AppError):
-    status_code = 403
-    code = "forbidden"
-
 class BadRequestError(AppError):
     status_code = 400
     code='bad_request'
@@ -27,5 +23,12 @@ class UnauthorizedError(AppError):
     code="unauthorized"
 
     def __init__(self, message: str = "Failed to log in"):
+        self.message = message
+        super().__init__(message)
+
+class ForbiddenError(AppError):
+    status_code = 403
+    code = "forbidden"
+    def __init__(self, message: str = "Not permitted"):
         self.message = message
         super().__init__(message)

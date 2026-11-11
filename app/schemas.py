@@ -6,22 +6,25 @@ class SUserAdd(BaseModel):
     email: EmailStr
     role: Role
 
+class SFlowerAdd(BaseModel):
+    # client input only: creator comes from the JWT, never from the request body
+    name: str
+    is_public: bool = False
+
+class SFlowerBrief(SFlowerAdd):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    creator_id: int
+
+class SFlower(SFlowerBrief):
+    creator: SUserAdd
+
 class SUser(SUserAdd):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    flowers: list[SFlowerAdd]
-
-class SFlowerAdd(BaseModel):
-    name: str
-    is_public: bool = False
-    creator_id: int
-
-class SFlower(SFlowerAdd):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    creator: SUserAdd
+    flowers: list[SFlowerBrief]
 
 class SFlowerUpdate(BaseModel):
     name: str | None = None

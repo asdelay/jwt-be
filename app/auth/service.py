@@ -16,8 +16,8 @@ from sqlalchemy.orm import selectinload
 
 from app.constants import OTP_EXPIRATION_MINUTES, MAX_OTP_VERIFICATION_ATTEMPTS
 from app.credentials import settings
-from app.exceptions import UnauthorizedError
-from app.models import User, Otp
+from app.exceptions import UnauthorizedError, ForbiddenError
+from app.models import User, Otp, Role
 from app.schemas import SLogin
 from app.utils import generate_otp, hash_otp, create_access_token
 
@@ -103,16 +103,43 @@ async def verify_code_by_email(code: str, email: str, session: AsyncSession) -> 
 @dataclass(frozen=True)
 class CurrentUser:
     id: int
-    role: str
+    role: Role
 
-async def get_current_user(token: Annotated[str | None, Depends(cookie_scheme)]):
-    if token is None:
-        raise UnauthorizedError("Not authenticated")
 
+def _decode_token(token: str) -> CurrentUser:
     try:
         payload = jwt.decode(token, settings.access_token_secret, algorithms=['HS256'], options={"require": ["exp", "sub"]})
-        return CurrentUser(id=int(payload["sub"]), role=payload["role"])
+        # Role(...) raises ValueError for an unknown role string -> treated as an invalid token
+        return CurrentUser(id=int(payload["sub"]), role=Role(payload["role"]))
     except jwt.ExpiredSignatureError:
         raise UnauthorizedError("Token expired")
     except (jwt.PyJWTError, KeyError, ValueError, TypeError):
         raise UnauthorizedError()
+
+
+async def get_current_user(token: Annotated[str | None, Depends(cookie_scheme)]) -> CurrentUser:
+    """Authentication required: 401 if there is no valid token."""
+    if token is None:
+        raise UnauthorizedError("Not authenticated")
+    return _decode_token(token)
+
+
+async def get_optional_user(token: Annotated[str | None, Depends(cookie_scheme)]) -> CurrentUser | None:
+    """Authentication optional: None for anonymous visitors, but a bad/expired token is still a 401."""
+    if token is None:
+        return None
+    return _decode_token(token)
+
+
+def require_role(*roles: Role):
+    """Dependency factory: require_role(Role.admin) returns a dependency that only lets those roles through."""
+    async def checker(user: Annotated[CurrentUser, Depends(get_current_user)]) -> CurrentUser:
+        if user.role not in roles:
+            raise ForbiddenError("You don't have permission to perform this action")
+        return user
+    return checker
+
+
+CurrentUserDep = Annotated[CurrentUser, Depends(get_current_user)]
+OptionalUserDep = Annotated[CurrentUser | None, Depends(get_optional_user)]
+AdminDep = Annotated[CurrentUser, Depends(require_role(Role.admin))]

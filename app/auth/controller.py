@@ -21,10 +21,6 @@ async def login(login_data: SLogin, session: SessionDep, background_tasks: Backg
 async def register():
     return {"message": "not implemented yet"}
 
-@auth_router.get("/me")
-async def me():
-    return {"message": "not implemented yet"}
-
 @auth_router.post("/refresh")
 async def refresh():
     return {"message": "not implemented yet"}

@@ -17,8 +17,39 @@ TODO:
 
 hints for myself =) 
 
-run migration - `alembic revision --autogenerate -m "comment"`
+run migration - `uv run alembic revision --autogenerate -m "comment"`
 
-apply migration - `alembic upgrade head`
+apply migration - `uv run alembic upgrade head`
 
-rollback migration - `alembic downgrade head`
+rollback migration - `uv run alembic downgrade -1`
+
+### Claude Code
+
+Context & tokens:
+- `/context` - see what fills the context window
+- `/usage` - check usage / limits
+- `/clear` - start fresh (do it between unrelated tasks, saves tokens)
+- `/compact` - summarize the conversation to free context, keeps the gist
+- `/model` - switch model (Sonnet/Haiku for simple stuff, Opus for hard stuff) and effort level
+
+Workflow:
+- `Shift+Tab` - cycle modes (plan mode = Claude plans first, no edits)
+- `Esc` - interrupt Claude; `Esc Esc` - rewind to an earlier message
+- `@path/to/file` - point Claude to a file directly (no searching)
+- `! command` - run a shell command yourself, output goes into the chat
+- `/resume` - continue a previous conversation
+- `claude -c` - (in terminal) continue the last conversation
+
+Project setup:
+- `/memory` - edit CLAUDE.md / memory files
+- `/init` - generate a CLAUDE.md from the codebase
+- `/permissions` - manage allow/deny rules (e.g. deny reading `.env`)
+- `/config` - settings (theme, etc.)
+
+Code quality:
+- `/code-review` - review current changes for bugs
+- `/security-review` - security review of pending changes
+- `/simplify` - clean up changed code
+
+Help:
+- `/help` - list all commands
