@@ -151,13 +151,14 @@ async def verify_code_by_email(code: str, email: str, session: AsyncSession) -> 
 class CurrentUser:
     id: int
     role: Role
+    username: str
 
 
 def _decode_token(token: str) -> CurrentUser:
     try:
         payload = jwt.decode(token, settings.access_token_secret, algorithms=['HS256'], options={"require": ["exp", "sub"]})
         # Role(...) raises ValueError for an unknown role string -> treated as an invalid token
-        return CurrentUser(id=int(payload["sub"]), role=Role(payload["role"]))
+        return CurrentUser(id=int(payload["sub"]), role=Role(payload["role"]), username=str(payload["username"]))
     except jwt.ExpiredSignatureError:
         raise UnauthorizedError("Token expired")
     except (jwt.PyJWTError, KeyError, ValueError, TypeError):

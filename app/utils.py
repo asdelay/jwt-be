@@ -27,6 +27,7 @@ def create_access_token(user: SUser) -> str:
     payload = {
         "sub": str(user.id),
         "role": user.role.value,
+        "username": user.username,
         "iat": now,
         "exp": now + ACCESS_TTL,
     }

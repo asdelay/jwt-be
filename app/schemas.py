@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Annotated
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field, StringConstraints
+from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator
 
 from app.models import Role
 
@@ -41,6 +42,25 @@ class SUser(SUserAdd):
 
     id: int
     flowers: list[SFlowerBrief]
+    created_at: datetime
+    updated_at: datetime
+
+class SUserUpdate(BaseModel):
+    # PATCH semantics: only fields the client actually sends are applied (see exclude_unset in the service)
+    # extra="forbid": unknown/typo'd fields ({"email": ...}, {"usrname": ...}) -> 422 instead of being silently dropped
+    model_config = ConfigDict(extra="forbid")
+
+    username: Username | None = None  # owner only
+    role: Role | None = None          # admin only, never on their own account
+
+    @field_validator("username", "role", mode="before")
+    @classmethod
+    def reject_explicit_null(cls, value):
+        # field validators only run for fields the client sent, so None here means an explicit null -> 422.
+        # Omitting a field (default None) is still fine and means "don't change it".
+        if value is None:
+            raise ValueError("may be omitted, but can't be null")
+        return value
 
 class SFlowerUpdate(BaseModel):
     name: str | None = None

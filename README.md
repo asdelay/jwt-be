@@ -2,7 +2,7 @@ app with full jwt rotation
 
 TODO: 
     add user patch for users to be able to change username
-    add refresh token w rotation and revokation strategy
+    add refresh token w rotation and revocation strategy
     add openid connect via google
     add rate limiting on all auth routes: login, register, verify, me, refresh
 
